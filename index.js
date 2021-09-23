@@ -1,12 +1,14 @@
 require("dotenv").config();
 
+const path = require('path')
+
 var express = require("express");
 
 let bot_token = process.env.BOT_TOKEN
 
 const app = express();
 
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // let token = "";
 
