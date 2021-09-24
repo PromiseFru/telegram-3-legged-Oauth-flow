@@ -10,6 +10,37 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const {
+    TelegramClient
+} = require("telegram");
+const {
+    StringSession
+} = require("telegram/sessions");
+const input = require("input"); // npm i input
+
+const apiId = process.env.APIID;
+const apiHash = process.env.APIHASH;
+const stringSession = new StringSession(""); // fill this later with the value from session.save()
+
+(async () => {
+    console.log("Loading interactive example...");
+    const client = new TelegramClient(stringSession, apiId, apiHash, {
+        connectionRetries: 5,
+    });
+    await client.start({
+        phoneNumber: async () => await input.text("Please enter your number: "),
+        password: async () => await input.text("Please enter your password: "),
+        phoneCode: async () =>
+            await input.text("Please enter the code you received: "),
+        onError: (err) => console.log(err),
+    });
+    console.log("You should now be connected.");
+    console.log(client.session.save()); // Save this string to avoid logging in again
+    await client.sendMessage("me", {
+        message: "Hello!"
+    });
+})();
+
 // let token = "";
 
 // // start oauth
@@ -34,4 +65,4 @@ app.use(express.static(path.join(__dirname, 'public')));
 // })
 
 
-app.listen(3000, console.log("Server running"));
+// app.listen(3000, console.log("Server running"));
