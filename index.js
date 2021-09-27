@@ -1,68 +1,47 @@
 require("dotenv").config();
 
-const path = require('path')
-
 var express = require("express");
-
-let bot_token = process.env.BOT_TOKEN
+const input = require("input")
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'public')));
-
 const {
-    TelegramClient
+    TelegramClient,
+    Api
 } = require("telegram");
 const {
     StringSession
 } = require("telegram/sessions");
-const input = require("input"); // npm i input
 
 const apiId = process.env.APIID;
 const apiHash = process.env.APIHASH;
-const stringSession = new StringSession(""); // fill this later with the value from session.save()
+let session_token = ""
+const stringSession = new StringSession(session_token);
 
-(async () => {
-    console.log("Loading interactive example...");
-    const client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
-    });
+const client = new TelegramClient(stringSession, apiId, apiHash, {
+    connectionRetries: 5,
+});
+
+// start oauth
+app.get("/start", async (req, res, next) => {
     await client.start({
         phoneNumber: async () => await input.text("Please enter your number: "),
-        password: async () => await input.text("Please enter your password: "),
         phoneCode: async () =>
             await input.text("Please enter the code you received: "),
         onError: (err) => console.log(err),
     });
     console.log("You should now be connected.");
-    console.log(client.session.save()); // Save this string to avoid logging in again
-    await client.sendMessage("me", {
-        message: "Hello!"
-    });
-})();
 
-// let token = "";
+    session_token = client.session.save();
+    return res.status(200).json(client.session.save())
+});
 
-// // start oauth
-// app.get("/start", (req, res, next) => {
-//     const url = `https://oauth.telegram.org/auth?bot_id=${bot_token}&origin=http://localhost:3000&embed=1&request_access=write`;
+// oauth callback
+app.get("/revoke", async (req, res, next) => {
+    await client.connect(); // This assumes you have already authenticated with .start()
 
-//     return res.status(200).json(url)
-// });
+    const result = await client.invoke(new Api.auth.LogOut({}));
+    return res.status(200).json(result)
+})
 
-// // oauth callback
-// app.get("/callback", async (req, res, next) => {
-//     token;
-
-//     return res.status(200).json(token);
-// });
-
-// // get users profile
-// app.get("/user", async (req, res, next) => {
-//     let profile;
-
-//     return res.status(200).json(profile);
-// })
-
-
-// app.listen(3000, console.log("Server running"));
+app.listen(3000, console.log("Server running"));
