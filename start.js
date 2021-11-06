@@ -21,7 +21,8 @@ const client = new TelegramClient(stringSession, apiId, apiHash, {});
     try {
         await client.start({
             phoneNumber: async () => await input.text("Please enter your number: "),
-            phoneCode: async () => await input.text("Please enter the code you received: ")
+            phoneCode: async () => await input.text("Please enter the code you received: "),
+            onError: (err) => console.log(err),
         });
 
         let data = {
